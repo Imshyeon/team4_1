@@ -17,7 +17,7 @@ VideoWriter video;
 int ch1, btn;
 int playmod;
 Mat frame, gray, dst, hough;
-Mat cdst;// Hough º¯È¯
+Mat cdst;// Hough ë³€í™˜
 
 Mat videoframe; // , buf;
 int pos = cap.get(CAP_PROP_POS_FRAMES);
@@ -50,12 +50,12 @@ void A() {
     }
 }
 
-void button(int id) // ¹öÆ° ÄÚµå
+void button(int id) // ë²„íŠ¼ ì½”ë“œ
 {
     playmod = id;
 }
 
-void fileCallBack(int id)   // ÆÄÀÏ ºÒ·¯¿À´Â ÄÚµå
+void fileCallBack(int id)   // íŒŒì¼ ë¶ˆëŸ¬ì˜¤ëŠ” ì½”ë“œ
 {
     btn = id;
     OpenFileDialog* openFileDialog = new OpenFileDialog();
@@ -70,7 +70,7 @@ void fileCallBack(int id)   // ÆÄÀÏ ºÒ·¯¿À´Â ÄÚµå
     }
 }
 
-void save(int id)   //¿µ»ó ÀúÀå
+void save(int id)   //ì˜ìƒ ì €ìž¥
 {
     if (ch1 == 1) {
         SaveFileDialog* openFileDialog = new SaveFileDialog();
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
     //glui->add_column_to_panel(panel1, false);
     //GLUI_Checkbox* ch0_3 = glui->add_checkbox_to_panel(panel1, "Save", &ch1, 2, save);
     glui->add_separator_to_panel(panel0);
-    new GLUI_Button(glui, "QUIT", 0, (GLUI_Update_CB)exit);   //quit¹öÆ°
+    new GLUI_Button(glui, "QUIT", 0, (GLUI_Update_CB)exit);   //quitë²„íŠ¼
     glui->set_main_gfx_window(main_window);
     glutMainLoop();
     cap.release();
