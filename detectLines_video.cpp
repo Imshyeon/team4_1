@@ -2,16 +2,16 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-
 #include <iostream>
 #include <stdio.h>
+#include <vector> //hough
+#include <algorithm> //hough
 
 using namespace cv;
 using namespace std;
 
 int R = 1;
 int snr = 5200;
-
 
 void calcPSF(Mat& frameOutImg, Size filterSize, int R);
 void fftshift(const Mat& frameInImg, Mat& frameOutImg);
@@ -30,6 +30,9 @@ namespace {
     }
 
     int process(VideoCapture& capture) {
+        Mat dst,cdst;   //hough
+        vector<Vec4i> lines;    //hough
+
         int n = 0;
         char filename[200];
         string window_name = "video test || q or esc -> video over";
@@ -43,10 +46,15 @@ namespace {
             if (frame.empty())
                 break;
 
-            //////////////////////////
             cvtColor(frame,gray,COLOR_BGR2GRAY);
-            
-            imshow(window_name, gray);
+            Canny(gray,dst,100,200);    //hough
+            cvtColor(dst,cdst,COLOR_GRAY2BGR);  //hough
+            HoughLinesP(dst, lines, 1, CV_PI / 180, 50, 100, 20);//hough
+                for (size_t i = 0; i < lines.size(); i++) {//hough
+                    Vec4i l = lines[i];//hough
+                    line(cdst, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 3, 4);//hough
+            }
+            imshow(window_name, cdst);//hough
 
             Rect roi = Rect(0,0,gray.cols&-2, gray.rows&-2);
 
@@ -59,7 +67,6 @@ namespace {
             frameOut.convertTo(frameOut,CV_8U);
              normalize(frameOut,frameOut,0,255,NORM_MINMAX);
 
-            //////////////////////////
 
             char key = (char)waitKey(30); //delay N millis, usually long enough to display and capture input
 
@@ -68,11 +75,6 @@ namespace {
             case 'Q':
             case 27: //escape key
                 return 0;
-            case ' ': //Save an image
-                sprintf(filename,"filename%.3d.jpg",n++);
-                imwrite(filename,frame);
-                cout << "Saved " << filename << endl;
-                break;
             default:
                 break;
             }
@@ -80,6 +82,9 @@ namespace {
         return 0;
     }
 }
+
+
+/************************main함수***************************/
 
 int main(int ac, char** av) {
 
@@ -104,16 +109,17 @@ int main(int ac, char** av) {
         return 1;
     }
     return process(capture);
-
-
-
 }
+/******************************************************************/
+
+
+/***************************deblur 함수*****************************/
 
 void calcPSF(Mat& frameOutImg, Size filterSize, int R)
 {
     Mat h(filterSize,CV_32F,Scalar(0));
     Point point(filterSize.width/2, filterSize.height/2);
-    circle(h,point,R,255,-1,8);
+    circle(h,point,1,255,-1,8);
     Scalar summa = sum(h);
     frameOutImg = h/summa[0];
 }
@@ -168,3 +174,4 @@ void calcWnrFilter(const Mat& input_h_PSF, Mat& output_G, double nsr)
     denom += nsr;
     divide(planes[0],denom,output_G);
 }
+/******************************************************************/
