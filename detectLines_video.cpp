@@ -22,7 +22,6 @@ void calcWnrFilter(const Mat& input_h_PSF, Mat& output_G, double nsr);
 namespace {
     void help(char** av) {
         cout << "q,Q,esc -- quit" << endl
-             << "space   -- save frame(한장씩)" << endl << endl
              << "\tTo capture from a camera pass the device number. To find the device number, try ls /dev/video*" << endl
              << "\texample: " << av[0] << " 0" << endl
              << "\tYou may also pass a video file instead of a device number" << endl
@@ -36,7 +35,7 @@ namespace {
         int n = 0;
         char filename[200];
         string window_name = "video test || q or esc -> video over";
-        cout << "press space to save a picture. q or esc to quit" << endl;
+        cout << "q or esc to quit" << endl;
         namedWindow(window_name, WINDOW_KEEPRATIO); //resizable window;
         Mat frame, frameOut;
         Mat gray;
