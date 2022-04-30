@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 # Define project name
-project(detectLines_video)
+project(usingMsk)
 
 # Find OpenCV, you may need to set OpenCV_DIR variable
 # to the absolute path to the directory containing OpenCVConfig.cmake file
@@ -24,7 +24,7 @@ message(STATUS "    libraries: ${OpenCV_LIBS}")
 message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
 # Declare the executable target built from your sources
-add_executable(DetectL detectLines_video.cpp)
+add_executable(DetectL usingMsk.cpp)
 
 # Link your application with OpenCV libraries
 target_link_libraries(DetectL PRIVATE ${OpenCV_LIBS})
