@@ -55,11 +55,7 @@ int main(int ac, char** av)
         const Point* ppt2[1] = {points2[0]};
         int npt2[] = {4};
         fillPoly(roi_msk2, ppt2, npt2, 1, Scalar(255,255,255), 8);   //mask2 제작
-       
-        roi1=frame.clone();  //roi=edges.clone();
-        bitwise_and(frame,roi_msk1,roi1);
-        roi2=frame.clone();
-        bitwise_and(frame,roi_msk2,roi2); //bitwise_and(edges,msk,roi);
+     
         bitwise_or(roi_msk1,roi_msk2,roi_msk);
         bitwise_and(frame,roi_msk,roi);
     /********************HSV*********************/ 
@@ -73,20 +69,17 @@ int main(int ac, char** av)
                                           1,1,1);
         morphologyEx(msk,msk,MORPH_OPEN,kernel);
     /*****************블러, 에지******************/
-        //blur(white_msk,Gblur,Size(5,5),Point(-1,-1));
         GaussianBlur(msk,Gblur,Size(5,5),0,0);
-        //bilateralFilter(white_msk,Gblur,9,75,75,4);
-        //medianBlur(white_msk,Gblur,5);
         Canny(Gblur,edges,300,800,kernel_size);//Canny(Gblur,edges,100,600,kernel_size);
     /*******************Lines********************/
         cvtColor(edges,cdst,COLOR_GRAY2BGR);
         HoughLinesP(edges, lines, 1, CV_PI / 180, 50, 100, 20);//hough
                 for (size_t i = 0; i < lines.size(); i++) {//hough
                     Vec4i l = lines[i];//hough
-                    line(cdst, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 3, 4);//hough
+                    line(frame, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 3);//hough
                 }
     /*****************영상보기********************/
-        imshow(window_name, cdst);
+        imshow(window_name, frame);
     /****************영상 나가기******************/
         char key = (char)waitKey(30);
         switch (key) {
