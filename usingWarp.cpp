@@ -93,7 +93,7 @@ int main(int ac, char** av)
     /*******************Warp**********************/
         Mat newWarp, result;
         warpPerspective(out,newWarp,re_matrix,frame.size());
-        addWeighted(frame, 1, newWarp, 0.4, 0, result);
+        addWeighted(frame, 1, newWarp, 1, 0, result);
     /******************영상보기*******************/
         imshow(window_name, result);
     /****************영상 나가기******************/
