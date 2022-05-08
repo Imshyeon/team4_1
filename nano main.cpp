@@ -1,3 +1,4 @@
+// 카메라 보류
 #include <iostream>
 #include <raspicam/raspicam_cv.h>
 #include <opencv2/imgproc.hpp>
