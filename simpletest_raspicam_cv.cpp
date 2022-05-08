@@ -1,3 +1,7 @@
+// cmake 안 할거면
+// g ++ simpletest_raspicam_cv.cpp -o simpletest_raspicam_cv -I / usr / local / include / -lraspicam -lraspicam_cv -lmmal -lmmal_core -lmmal_util -lopencv_core -lopencv_highgui
+ 
+
 #include <ctime>
 #include <iostream>
 #include <raspicam/raspicam_cv.h>
