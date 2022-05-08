@@ -1,5 +1,7 @@
 /**
 */
+// cmake 안 할거면 g ++ simpletest_raspicam.cpp -o simpletest_raspicam -I / usr / local / include -lraspicam -lmmal -lmmal_core -lmmal_util
+
 #include <ctime>
 #include <fstream>
 #include <iostream>
