@@ -56,8 +56,8 @@ int main(int ac, char** av)
         roi_msk1 = Mat::zeros(out.size(), CV_8UC3); //roi_msk1을 out사이즈로 검은 창을 만든다.
         Point points1[1][4];    //관심영역으로 설정할 구역 값 설정하기
         points1[0][0] = Point(out.cols*0.15,out.rows);
-        points1[0][1] = Point(out.cols*0.15,out.rows*0.2);
-        points1[0][2] = Point(out.cols*0.3,out.rows*0.2);
+        points1[0][1] = Point(out.cols*0.15,out.rows*0.1);
+        points1[0][2] = Point(out.cols*0.3,out.rows*0.1);
         points1[0][3] = Point(out.cols*0.3,out.rows);
         const Point* ppt1[1] = {points1[0]};
         int npt1[] = {4};
@@ -68,8 +68,8 @@ int main(int ac, char** av)
         roi_msk2 = Mat::zeros(out.size(), CV_8UC3); //roi_msk2을 out사이즈로 검은 창을 만든다.
         Point points2[1][4];    //관심영역으로 설정할 구역 값 설정하기
         points2[0][0] = Point(out.cols*0.75,out.rows);
-        points2[0][1] = Point(out.cols*0.75,out.rows*0.2);
-        points2[0][2] = Point(out.cols*0.9,out.rows*0.2);
+        points2[0][1] = Point(out.cols*0.75,out.rows*0.1);
+        points2[0][2] = Point(out.cols*0.9,out.rows*0.1);
         points2[0][3] = Point(out.cols*0.9,out.rows);
         const Point* ppt2[1] = {points2[0]};
         int npt2[] = {4};
