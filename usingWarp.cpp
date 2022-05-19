@@ -1,3 +1,4 @@
+#include <opencv2/opencv.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/core/core.hpp>
@@ -7,19 +8,37 @@
 #include <stdio.h>
 #include <vector>
 #include <algorithm>
+#include "opencv2/features2d/features2d.hpp"
+#include "opencv2/opencv_modules.hpp"
+#include "opencv2/calib3d/calib3d.hpp"
+#include "opencv2/videoio.hpp"
+#include <math.h>
+#include <iomanip>
 
 using namespace cv;
 using namespace std;
 
+void draw_locations(Mat& img,vector<Rect>& locations, const Scalar& color, string text);
+#define CASCADE_FILE_NAME "/home/suhyeon/capstone_design/suhyeon_code/cars.xml"
+#define CAR_IMAGE "/home/suhyeon/capstone_design/suhyeon_code/car.png"
+
 Mat frame, frameOut;
 Mat msk, roi_msk, roi_msk1, roi_msk2, roi1, roi2, roi;
 Mat hsv, yellow_msk, white_msk, msk_final;
-Mat edges, cdst, Gblur;
+Mat edges, cdst, Gblur, newWarp, result;
 vector<Vec4i> lines;
-//int kernel_size=5;
 
 int main(int ac, char** av)
 {
+    CascadeClassifier car;
+    vector<Rect> car_found;
+    vector<Mat> car_tracking_img;
+
+    car.load(CASCADE_FILE_NAME);
+    if(car.empty())
+        cout << "xml file not loaded" << endl;
+
+    //draw_locations(result, car, Scalar(0,0,255), "car");
     /****************영상 불러오기*************/
         cv::CommandLineParser parser(ac, av, "{help h||}{@input||}");
         std::string arg = parser.get<std::string>("@input");
@@ -93,10 +112,12 @@ int main(int ac, char** av)
                     line(out, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 15);//직선 그리기. out창에 결과값을 나타내고 Scalar(0,0,255)인 빨간색으로 표시
                 }
     /******************Warp,msk*******************/
-        Mat newWarp, result;
         warpPerspective(out,newWarp,re_matrix,frame.size());    //워프영상인 out창을 re_matrix 행렬에 맞춰 frame사이즈로 newWarp에 저장.
         addWeighted(frame, 1, newWarp, 1, 0, result);   //frame*1 + newWarp*1 = result
     /******************영상보기*******************/
+        car.detectMultiScale(result, car_found, 1.1, 3);
+        for(int c = 0; c<car_found.size(); c++)
+            rectangle(result, car_found[c].tl(),car_found[c].br(),Scalar(0, 0, 255), 3);
         imshow(window_name, result);    //result결과값 보기
     /****************영상 나가기******************/
         char key = (char)waitKey(30);
@@ -111,3 +132,31 @@ int main(int ac, char** av)
     }
     return 0;
 }
+/*
+void draw_locations(Mat& img, vector<Rect>& locations, const Scalar& color, string text)
+{
+    Mat img1, car, carMsk;
+    img.copyTo(img1);
+
+    if(!locations.empty()){
+        for(int i = 0; i<locations.size(); ++i){
+        if(text == "car"){
+            car = imread(CAR_IMAGE);
+            carMsk = car.clone();
+            cvtColor(carMsk,carMsk,COLOR_BGR2GRAY);
+            locations[i].y = locations[i].y+img.rows/2;
+            Size size(locations[i].width/1.5,locations[i].height/3);
+            resize(car,car,size,INTER_NEAREST);
+            resize(carMsk,carMsk,size,INTER_NEAREST);
+            Mat roi = img.rowRange(locations[i].y-size.height, (locations[i].y+locations[i].height/3)-size.height).colRange(locations[i].x, (locations[i].x  +locations[i].width/1.5));
+            bitwise_and(car, roi, car);
+            car.setTo(color, carMsk);
+            add(roi,car,car);
+            car.copyTo(img1.rowRange(locations[i].y-size.height, (locations[i].y+locations[i].height/3)-size.height).colRange(locations[i].x, (locations[i].x  +locations[i].width/1.5)));    
+        }
+        rectangle(img,locations[i],color,-1);
+        }
+        addWeighted(img1, 0.8, img, 0.2, 0, img);
+    }
+}
+*/
