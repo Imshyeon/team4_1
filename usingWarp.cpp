@@ -11,34 +11,47 @@
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv2/opencv_modules.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
-#include "opencv2/videoio.hpp"
-#include <math.h>
+//#include <math.h>
 #include <iomanip>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
 
 using namespace cv;
 using namespace std;
 
 void draw_locations(Mat& img,vector<Rect>& locations, const Scalar& color, string text);
 #define CASCADE_FILE_NAME "/home/suhyeon/capstone_design/suhyeon_code/cars.xml"
-#define CAR_IMAGE "/home/suhyeon/capstone_design/suhyeon_code/car.png"
-
+//#define CAR_IMAGE "/home/suhyeon/capstone_design/suhyeon_code/car.png"
 Mat frame, frameOut;
 Mat msk, roi_msk, roi_msk1, roi_msk2, roi1, roi2, roi;
 Mat hsv, yellow_msk, white_msk, msk_final;
 Mat edges, cdst, Gblur, newWarp, result;
 vector<Vec4i> lines;
+vector<Rect> car_found;
+Mat car_tracking_img;
+int CarRect = 0, Detectlines = 0, Gpio = 0;
+
+void gpio()
+{
+    if((CarRect && Detectlines) == 1)
+    {
+        printf("gpio in!\r\n");
+    }
+    else
+        printf("gpio out~\r\n");
+}
 
 int main(int ac, char** av)
 {
     CascadeClassifier car;
-    vector<Rect> car_found;
-    vector<Mat> car_tracking_img;
-
+    //vector<Rect> car_found;
     car.load(CASCADE_FILE_NAME);
     if(car.empty())
         cout << "xml file not loaded" << endl;
-
-    //draw_locations(result, car, Scalar(0,0,255), "car");
     /****************영상 불러오기*************/
         cv::CommandLineParser parser(ac, av, "{help h||}{@input||}");
         std::string arg = parser.get<std::string>("@input");
@@ -56,10 +69,10 @@ int main(int ac, char** av)
                 break;
     /******************warp*****************/    
         Point2f inputp[4];  //워프변환 행렬에 필요한 값 설정
-        inputp[0] = Point(frame.cols/2-20,frame.rows*0.54);
-        inputp[1] = Point(frame.cols/2+60, frame.rows*0.54);
-        inputp[2] = Point(frame.cols*0.42,frame.rows);
-        inputp[3] = Point(frame.cols*0.9, frame.rows);
+        inputp[0] = Point(frame.cols/2-65,frame.rows*0.6);//0.54
+        inputp[1] = Point(frame.cols/2+97, frame.rows*0.6);
+        inputp[2] = Point(frame.cols*0.44,frame.rows);
+        inputp[3] = Point(frame.cols*0.89, frame.rows);
         Point2f outputp[4]; //워프변환 행렬에 필요한 값 설정
         outputp[0] = Point(0,0);
         outputp[1] = Point(frame.cols-350,0);
@@ -105,19 +118,25 @@ int main(int ac, char** av)
     /*****************DetectL*********************/
         GaussianBlur(msk_final,Gblur,Size(5,5),0,0);    //가우시안블러. 5x5사이즈로 블러효과를 내어 Gblur에 저장.
         Canny(Gblur,edges,100,200); //Gblur를 케니에지 -> 에지 연산
-        cvtColor(edges,cdst,COLOR_GRAY2BGR);    //edges를 흑백영상에서 컬러영상으로 바꾼 뒤, cdst에 저장
+        //cvtColor(edges,cdst,COLOR_GRAY2BGR);    //edges를 흑백영상에서 컬러영상으로 바꾼 뒤, cdst에 저장
             HoughLinesP(edges, lines, 1, CV_PI / 180, 100, 100, 20);//hough변환
                 for (size_t i = 0; i < lines.size(); i++) {//hough
                     Vec4i l = lines[i];//hough
+                    Detectlines = 1;
                     line(out, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 15);//직선 그리기. out창에 결과값을 나타내고 Scalar(0,0,255)인 빨간색으로 표시
                 }
     /******************Warp,msk*******************/
         warpPerspective(out,newWarp,re_matrix,frame.size());    //워프영상인 out창을 re_matrix 행렬에 맞춰 frame사이즈로 newWarp에 저장.
         addWeighted(frame, 1, newWarp, 1, 0, result);   //frame*1 + newWarp*1 = result
-    /******************영상보기*******************/
-        car.detectMultiScale(result, car_found, 1.1, 3);
+    /******************차량검출*******************/
+        car.detectMultiScale(result, car_found, 1.1, 5);
         for(int c = 0; c<car_found.size(); c++)
             rectangle(result, car_found[c].tl(),car_found[c].br(),Scalar(0, 0, 255), 3);
+
+        if(!car_found.empty())
+            CarRect = 1;
+    /***************GPIO,영상보기*****************/ 
+        gpio();
         imshow(window_name, result);    //result결과값 보기
     /****************영상 나가기******************/
         char key = (char)waitKey(30);
@@ -132,31 +151,3 @@ int main(int ac, char** av)
     }
     return 0;
 }
-/*
-void draw_locations(Mat& img, vector<Rect>& locations, const Scalar& color, string text)
-{
-    Mat img1, car, carMsk;
-    img.copyTo(img1);
-
-    if(!locations.empty()){
-        for(int i = 0; i<locations.size(); ++i){
-        if(text == "car"){
-            car = imread(CAR_IMAGE);
-            carMsk = car.clone();
-            cvtColor(carMsk,carMsk,COLOR_BGR2GRAY);
-            locations[i].y = locations[i].y+img.rows/2;
-            Size size(locations[i].width/1.5,locations[i].height/3);
-            resize(car,car,size,INTER_NEAREST);
-            resize(carMsk,carMsk,size,INTER_NEAREST);
-            Mat roi = img.rowRange(locations[i].y-size.height, (locations[i].y+locations[i].height/3)-size.height).colRange(locations[i].x, (locations[i].x  +locations[i].width/1.5));
-            bitwise_and(car, roi, car);
-            car.setTo(color, carMsk);
-            add(roi,car,car);
-            car.copyTo(img1.rowRange(locations[i].y-size.height, (locations[i].y+locations[i].height/3)-size.height).colRange(locations[i].x, (locations[i].x  +locations[i].width/1.5)));    
-        }
-        rectangle(img,locations[i],color,-1);
-        }
-        addWeighted(img1, 0.8, img, 0.2, 0, img);
-    }
-}
-*/
