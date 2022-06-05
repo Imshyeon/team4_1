@@ -11,7 +11,7 @@
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv2/opencv_modules.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
-//#include <math.h>
+#include <math.h>
 #include <iomanip>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -25,30 +25,26 @@ using namespace std;
 
 void draw_locations(Mat& img,vector<Rect>& locations, const Scalar& color, string text);
 #define CASCADE_FILE_NAME "/home/suhyeon/capstone_design/suhyeon_code/cars.xml"
-//#define CAR_IMAGE "/home/suhyeon/capstone_design/suhyeon_code/car.png"
 Mat frame, frameOut;
 Mat msk, roi_msk, roi_msk1, roi_msk2, roi1, roi2, roi;
 Mat hsv, yellow_msk, white_msk, msk_final;
 Mat edges, cdst, Gblur, newWarp, result;
 vector<Vec4i> lines;
 vector<Rect> car_found;
-Mat car_tracking_img;
-int CarRect = 0, Detectlines = 0, Gpio = 0;
+//Mat car_tracking_img;
+int CarRect, Detectlines, Gpio = 0;
 
 void gpio()
 {
-    if((CarRect && Detectlines) == 1)
-    {
+    if(Detectlines == 1) //if((CarRect && Detectlines) == 1)
         printf("gpio in!\r\n");
-    }
-    else
+    else if(Detectlines != 1)
         printf("gpio out~\r\n");
 }
 
 int main(int ac, char** av)
 {
     CascadeClassifier car;
-    //vector<Rect> car_found;
     car.load(CASCADE_FILE_NAME);
     if(car.empty())
         cout << "xml file not loaded" << endl;
@@ -69,10 +65,11 @@ int main(int ac, char** av)
                 break;
     /******************warp*****************/    
         Point2f inputp[4];  //워프변환 행렬에 필요한 값 설정
-        inputp[0] = Point(frame.cols/2-65,frame.rows*0.6);//0.54
+        inputp[0] = Point(frame.cols/2-65,frame.rows*0.6);
         inputp[1] = Point(frame.cols/2+97, frame.rows*0.6);
-        inputp[2] = Point(frame.cols*0.44,frame.rows);
-        inputp[3] = Point(frame.cols*0.89, frame.rows);
+        inputp[2] = Point(frame.cols*0.42,frame.rows);
+        inputp[3] = Point(frame.cols*0.9, frame.rows);
+        Point2f* ppt0[1] = {inputp};
         Point2f outputp[4]; //워프변환 행렬에 필요한 값 설정
         outputp[0] = Point(0,0);
         outputp[1] = Point(frame.cols-350,0);
@@ -118,7 +115,7 @@ int main(int ac, char** av)
     /*****************DetectL*********************/
         GaussianBlur(msk_final,Gblur,Size(5,5),0,0);    //가우시안블러. 5x5사이즈로 블러효과를 내어 Gblur에 저장.
         Canny(Gblur,edges,100,200); //Gblur를 케니에지 -> 에지 연산
-        //cvtColor(edges,cdst,COLOR_GRAY2BGR);    //edges를 흑백영상에서 컬러영상으로 바꾼 뒤, cdst에 저장
+        cvtColor(edges,cdst,COLOR_GRAY2BGR);    //edges를 흑백영상에서 컬러영상으로 바꾼 뒤, cdst에 저장
             HoughLinesP(edges, lines, 1, CV_PI / 180, 100, 100, 20);//hough변환
                 for (size_t i = 0; i < lines.size(); i++) {//hough
                     Vec4i l = lines[i];//hough
@@ -130,11 +127,21 @@ int main(int ac, char** av)
         addWeighted(frame, 1, newWarp, 1, 0, result);   //frame*1 + newWarp*1 = result
     /******************차량검출*******************/
         car.detectMultiScale(result, car_found, 1.1, 5);
-        for(int c = 0; c<car_found.size(); c++)
+        int c, cx1, cx2, cy1, cy2;
+        for(c = 0; c<car_found.size(); c++){
             rectangle(result, car_found[c].tl(),car_found[c].br(),Scalar(0, 0, 255), 3);
+            cx1 = car_found[c].x;
+            cy1 = car_found[c].y;
+            cx2 = car_found[c].x + car_found[c].width;
+            cy2 = car_found[c].y + car_found[c].height;
+        }
 
-        if(!car_found.empty())
-            CarRect = 1;
+        if(cy2 > frame.rows * 0.6){
+            if((cx1 > frame.cols/2-65) || (cx2 < frame.cols/2+97))
+            Detectlines = 1;
+        }
+        else
+            Detectlines = 0;
     /***************GPIO,영상보기*****************/ 
         gpio();
         imshow(window_name, result);    //result결과값 보기
