@@ -37,7 +37,7 @@ int CarRect, Detectlines, Gpio, DCount = 0;
 void gpio()
 {
     if(Detectlines == 1){ 
-        if(DCount == 4){
+        if(DCount == 2){
             system("./buzzer.py &");
             system(" ./LED.py & ");
             DCount = 0;
