@@ -36,8 +36,10 @@ int CarRect, Detectlines, Gpio = 0;
 
 void gpio()
 {
-    if(Detectlines == 1) //if((CarRect && Detectlines) == 1)
+    if(Detectlines == 1){
         printf("gpio in!\r\n");
+        system("./buzzer.py & ./LED.py & ");
+    }    
     else if(Detectlines != 1)
         printf("gpio out~\r\n");
 }
